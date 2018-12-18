@@ -27,35 +27,31 @@ configuration:
   defaultvalue: ""
   type: 9
   required: true
-- display: Default Target Mailbox
-  name: defaultTargetMailbox
-  defaultvalue: ""
-  type: 0
-  required: true
-- display: Exchange Server Version (2007,2010,2010_SP2,2013,2016)
-  name: defaultServerVersion
-  defaultvalue: ""
-  type: 0
-  required: false
-- display: Override Authentication Type (NTLM or Basic or Digest).
-  name: authType
-  defaultvalue: ""
-  type: 0
-  required: false
 - display: Has impersonation rights.
   name: impersonation
   defaultvalue: "false"
   type: 8
   required: false
-- display: Trust any certificate (unsecure)
-  name: insecure
-  defaultvalue: "true"
-  type: 8
-  required: false
-- display: Use system proxy settings
-  name: proxy
+- display: Email address to fetch incidents from
+  name: defaultTargetMailbox
+  defaultvalue: ""
+  type: 0
+  required: true
+- display: Folder name to fetch incidents from (Supports Exchange Folder ID and sub-folders
+    e.g. Inbox/Phishing)
+  name: folder
+  defaultvalue: Inbox
+  type: 0
+  required: true
+- display: Public Folder
+  name: isPublicFolder
   defaultvalue: "false"
   type: 8
+  required: false
+- display: "Exchange Server Version (On-Premise only. Supported versions: 2007,2010,2010_SP2,2013,2016)"
+  name: defaultServerVersion
+  defaultvalue: ""
+  type: 0
   required: false
 - display: Fetch incidents
   name: isFetch
@@ -67,18 +63,22 @@ configuration:
   defaultvalue: ""
   type: 13
   required: false
-- display: Folder name to fetch incidents from or Exchange Folder ID. Support also
-    sub-folders (e.g. Inbox\Phishing)
-  name: folder
-  defaultvalue: Inbox
-  type: 0
-  required: true
-- display: Public Folder
-  name: isPublicFolder
+- display: Trust any certificate (unsecure)
+  name: insecure
+  defaultvalue: "true"
+  type: 8
+  required: false
+- display: Use system proxy settings
+  name: proxy
   defaultvalue: "false"
   type: 8
   required: false
-- display: HTTP requests to exchange server timeout
+- display: 'DEBUG: Override Authentication Type (NTLM or Basic or Digest).'
+  name: authType
+  defaultvalue: ""
+  type: 0
+  required: false
+- display: 'DEBUG: HTTP requests to exchange server timeout'
   name: requestTimeout
   defaultvalue: "120"
   type: 0
