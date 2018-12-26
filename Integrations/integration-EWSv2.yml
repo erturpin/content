@@ -98,7 +98,8 @@ script:
 
     import exchangelib
     from exchangelib.errors import ErrorItemNotFound, ResponseMessageError, TransportError, RateLimitError, ErrorInvalidIdMalformed, \
-        ErrorFolderNotFound, ErrorToFolderNotFound, ErrorMailboxStoreUnavailable, ErrorMailboxMoveInProgress, ErrorInvalidPropertyRequest
+        ErrorFolderNotFound, ErrorToFolderNotFound, ErrorMailboxStoreUnavailable, ErrorMailboxMoveInProgress, ErrorInvalidPropertyRequest, \
+        AutoDiscoverFailed
     from exchangelib.items import Item, Message
     from exchangelib.services import EWSService, EWSAccountService
     from exchangelib.util import create_element, add_xml_child
@@ -244,8 +245,7 @@ script:
         AUTO_DISCOVERY = not EWS_SERVER and not VERSION_STR
 
         if AUTO_DISCOVERY:
-            credentials = Credentials(username=USERNAME, password=PASSWORD)
-            return None, credentials
+           return None, Credentials(username=USERNAME, password=PASSWORD)
         else:
             if not VERSION_STR:
                 if 'https://outlook.office365.com' in EWS_SERVER.lower():
@@ -269,8 +269,7 @@ script:
                 config_args['service_endpoint'] = EWS_SERVER
             else:
                 config_args['server'] = EWS_SERVER
-            config = Configuration(**config_args)
-            return config, None
+            return Configuration(**config_args), None
 
 
     def construct_config_args(config_str):
@@ -283,7 +282,7 @@ script:
         version = Version(build, api_version)
 
         config_args = {
-            'credentials' : config,
+            'credentials' : credentials,
             'auth_type' : auth_type,
             'version' : version,
             'service_endpoint' : service_endpoint
@@ -314,8 +313,8 @@ script:
             account = Account(
                 primary_smtp_address=account_email, autodiscover=True, credentials=credentials, access_type=access_type,
             )
-        except:
-            raise Exception("Auto discovery failed, please configure manually")
+        except AutoDiscoverFailed:
+             return_error("Auto discovery failed, please configure manually")
 
         #create dictionary with data and save to integration context
         config_str = {
@@ -348,7 +347,7 @@ script:
     # Exchange 2010 Fixes
     def fix_2010():
         version = None
-        if AUTO_DISCOVER:
+        if AUTO_DISCOVERY:
             if 'target-mailbox' in demisto.args():
                 version = get_account(demisto.args()['target-mailbox']).protocol.version.build
             else:
@@ -1513,7 +1512,7 @@ script:
         demisto.results(str_to_unicode(obj))
 
 
-    config, cresentials = prepare()
+    config, credentials = prepare()
     args = prepare_args(demisto.args())
     fix_2010()
     try:
