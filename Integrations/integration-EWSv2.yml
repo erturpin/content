@@ -240,14 +240,12 @@ script:
 
         global VERSION_STR
         global AUTO_DISCOVERY
-        if not EWS_SERVER and not VERSION_STR:
-            AUTO_DISCOVERY = True
-        else:
-            AUTO_DISCOVERY = False
+
+        AUTO_DISCOVERY = not EWS_SERVER and not VERSION_STR
 
         if AUTO_DISCOVERY:
             credentials = Credentials(username=USERNAME, password=PASSWORD)
-            return credentials
+            return None, credentials
         else:
             if not VERSION_STR:
                 if 'https://outlook.office365.com' in EWS_SERVER.lower():
@@ -272,7 +270,7 @@ script:
             else:
                 config_args['server'] = EWS_SERVER
             config = Configuration(**config_args)
-            return config
+            return config, None
 
 
     def construct_config_args(config_str):
@@ -314,7 +312,7 @@ script:
 
         try:
             account = Account(
-                primary_smtp_address=account_email, autodiscover=True, credentials=config, access_type=access_type,
+                primary_smtp_address=account_email, autodiscover=True, credentials=credentials, access_type=access_type,
             )
         except:
             raise Exception("Auto discovery failed, please configure manually")
@@ -349,9 +347,14 @@ script:
 
     # Exchange 2010 Fixes
     def fix_2010():
-        version = get_build(VERSION_STR)
-        if 'target-mailbox' in demisto.args():
-            version = get_account(demisto.args()['target-mailbox']).protocol.version.build
+        version = None
+        if AUTO_DISCOVER:
+            if 'target-mailbox' in demisto.args():
+                version = get_account(demisto.args()['target-mailbox']).protocol.version.build
+            else:
+                version = get_account(ACCOUNT_EMAIL).protocol.version.build
+        else:
+            version = get_build(VERSION_STR)
         if version <= EXCHANGE_2010_SP2:
             for m in (Item, Message, exchangelib.items.CalendarItem, exchangelib.items.Contact, exchangelib.items.DistributionList, exchangelib.items.PostItem, exchangelib.items.Task, exchangelib.items.MeetingRequest, exchangelib.items.MeetingResponse, exchangelib.items.MeetingCancellation):
                 for i,f in enumerate(m.FIELDS):
@@ -1510,9 +1513,9 @@ script:
         demisto.results(str_to_unicode(obj))
 
 
-    config = prepare() # TODO: May return credentials
+    config, cresentials = prepare()
     args = prepare_args(demisto.args())
-    # fix_2010() # TODO: Fix function to work with autodiscovery
+    fix_2010()
     try:
         if demisto.command() == 'test-module':
             test_module()
